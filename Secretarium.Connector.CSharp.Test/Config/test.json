@@ -1,0 +1,15 @@
+﻿{
+  "client": {
+    "certificate": {
+      "storeName": "SecretariumTest",
+      "thumbprint": "fe988d941b414103f02f69b3d8e42272270146f5",
+      "password": "SecretariumTestClient256",
+      "crtFile": "SecretariumTestClient256.crt",
+      "pfxFile": "SecretariumTestClient256.pfx"
+    }
+  },
+  "secretarium": {
+    "endPoint": "wss://secretarium.dev:4567/",
+    "knownPubKey": "rliD_CISqPEeYKbWYdwa-L-8oytAPvdGmbLC0KdvsH-OVMraarm1eo-q4fte0cWJ7-kmsq8wekFIJK0a83_yCg=="
+  }
+}
