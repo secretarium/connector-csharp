@@ -1,7 +1,7 @@
-﻿using Secretarium.Client.Helpers;
+﻿using Secretarium.Helpers;
 using NUnit.Framework;
 
-namespace Secretarium.Client.Test
+namespace Secretarium.Test
 {
     [TestFixture]
     public class TestECDSA

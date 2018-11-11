@@ -1,11 +1,11 @@
-﻿using Newtonsoft.Json;
-using Secretarium.Client.Helpers;
+using Newtonsoft.Json;
+using Secretarium.Helpers;
 using System;
 using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 
-namespace Secretarium.Client.Test
+namespace Secretarium.Test
 {
     public class Session
     {
@@ -20,7 +20,6 @@ namespace Secretarium.Client.Test
         public DHSteps Step;
         public byte[] ClientEphDHPubKey;
         public byte[] ClientPubKey;
-        public byte[] Nonce;
         public byte[] ProofOfWorkDetails;
         public byte[] SymmetricKey;
     }
@@ -56,13 +55,13 @@ namespace Secretarium.Client.Test
                 return false;
 
             var nonce = ByteHelper.GetRandom(32);
+
             var proofOfWorkDetails = ByteHelper.GetRandom(32);
             proofOfWorkDetails[0] = 15;
 
             serverHello = ByteHelper.Combine(nonce, proofOfWorkDetails);
-            
+
             Session.ClientEphDHPubKey = ch.ephDHKey;
-            Session.Nonce = nonce;
 
             return true;
         }

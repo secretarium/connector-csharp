@@ -1,0 +1,10 @@
+﻿{
+  "secretarium": {
+    "endPoint": "wss://secretarium.dev:4567/",
+    "knownPubKey": "rliD_CISqPEeYKbWYdwa-L-8oytAPvdGmbLC0KdvsH-OVMraarm1eo-q4fte0cWJ7-kmsq8wekFIJK0a83_yCg=="
+  },
+  "keys": {
+    "password": "SecretariumTestClient256",
+    "pfxFile": "SecretariumTestClient256.pfx"
+  }
+}

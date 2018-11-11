@@ -1,31 +1,32 @@
-﻿using Secretarium.Client.Helpers;
+﻿using Secretarium.Helpers;
 using NUnit.Framework;
 using System.Security.Cryptography;
 using System.Diagnostics;
 
-namespace Secretarium.Client.Test
+namespace Secretarium.Test
 {
     [TestFixture]
     public class TestProofOfWork
     {
-        private void VerifyPow(byte[] proofOfWorkDetails, byte[] proof)
+        private void VerifyPow(ProofOfWorkDetails details, byte[] proof)
         {
-            var difficulty = proofOfWorkDetails[0];
-            var challenge = proofOfWorkDetails.Extract(1);
-            var res = new ProofOfWork<SHA256Cng>(difficulty, challenge).Verify(proof);
+            var res = new ProofOfWork<SHA256Cng>(details.difficulty, details.challenge).Verify(proof);
             Assert.IsTrue(res);
         }
 
         [Test]
         public void TestComputeProofOfWork()
         {
-            var proofOfWorkDetails = ByteHelper.GetRandom(32);
-            proofOfWorkDetails[0] = 15;
+            var d = new ProofOfWorkDetails
+            {
+                difficulty = 15,
+                challenge = ByteHelper.GetRandom(31)
+            };
 
-            var res = DiffieHellmanHelper.ComputeProofOfWork(proofOfWorkDetails, out byte[] proof);
+            var res = DiffieHellmanHelper.ComputeProofOfWork(d, out byte[] proof);
             Assert.IsTrue(res);
 
-            VerifyPow(proofOfWorkDetails, proof);
+            VerifyPow(d, proof);
         }
 
         /* With 50 loops
@@ -46,22 +47,25 @@ namespace Secretarium.Client.Test
 
             for (var k = 0; k < loops; k++)
             {
-                var proofOfWorkDetails = ByteHelper.GetRandom(32);
+                var d = new ProofOfWorkDetails
+                {
+                    challenge = ByteHelper.GetRandom(31)
+                };
 
                 for (var i = 0; i <difficulties.Length; i++)
                 {
                     var sw1 = Stopwatch.StartNew();
 
-                    proofOfWorkDetails[0] = (byte)difficulties[i];
+                    d.difficulty = (byte)difficulties[i];
 
-                    var res = DiffieHellmanHelper.ComputeProofOfWork(proofOfWorkDetails, out byte[] proof);
+                    var res = DiffieHellmanHelper.ComputeProofOfWork(d, out byte[] proof);
                     Assert.IsTrue(res);
 
                     sw1.Stop();
 
                     var sw2 = Stopwatch.StartNew();
 
-                    VerifyPow(proofOfWorkDetails, proof);
+                    VerifyPow(d, proof);
 
                     sw2.Stop();
 

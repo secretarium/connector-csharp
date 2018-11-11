@@ -1,11 +1,11 @@
 ﻿using System.IO;
-using Secretarium.Client.Helpers;
+using Secretarium.Helpers;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography;
 
-namespace Secretarium.Client.Test
+namespace Secretarium.Test
 {
     [TestFixture]
     public class TestX509
@@ -15,10 +15,10 @@ namespace Secretarium.Client.Test
         [OneTimeSetUp]
         public void FixtureSetup()
         {
-            var configDir = SwssConfigHelper.ConfigDir;
+            var configDir = ScpConfigHelper.ConfigDir;
             Assert.NotNull(configDir, "can't find config dir");
 
-            var config = JsonConvert.DeserializeObject<SwssConfig.CertificateConfig>(
+            var config = JsonConvert.DeserializeObject<ScpConfig.KeyConfig>(
                 @"
                     {
                         ""password"": ""SecretariumTestClient256"",

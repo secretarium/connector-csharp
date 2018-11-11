@@ -1,14 +1,13 @@
-namespace Secretarium.Client
+namespace Secretarium
 {
-    public class SwssConfig
+    public class ScpConfig
     {
         public ClientConfig client { get; set; }
         public SecretariumConfig secretarium { get; set; }
-        
+        public KeyConfig keys { get; set; }
+
         public class ClientConfig
         {
-            public KeyConfig keys { get; set; }
-            public CertificateConfig certificate { get; set; }
             public int proofOfWorkMaxDifficulty { get; set; }
         }
 
@@ -20,14 +19,18 @@ namespace Secretarium.Client
 
         public class KeyConfig
         {
+            // Secretarium key
+            public string iv { get; set; }
+            public string salt { get; set; }
+            public string keys { get; set; }
+            public string password { get; set; }
+
+            // Pfx file
+            public string pfxFile { get; set; }
+
+            // ECDSA key
             public string publicKey { get; set; }
             public string privateKey { get; set; }
-        }
-
-        public class CertificateConfig
-        {
-            public string pfxFile { get; set; }
-            public string password { get; set; }
         }
     }
 }

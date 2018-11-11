@@ -1,6 +1,6 @@
 ﻿using System.Security.Cryptography.X509Certificates;
 
-namespace Secretarium.Client.Helpers
+namespace Secretarium.Helpers
 {
     public static class X509Helper
     {

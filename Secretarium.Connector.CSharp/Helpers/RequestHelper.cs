@@ -1,4 +1,4 @@
-﻿namespace Secretarium.Client.Helpers
+﻿namespace Secretarium.Helpers
 {
     public static class RequestHelper
     {

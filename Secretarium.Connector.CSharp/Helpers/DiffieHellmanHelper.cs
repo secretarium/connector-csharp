@@ -1,23 +1,13 @@
 ﻿using System.Linq;
 using System.Security.Cryptography;
 
-namespace Secretarium.Client.Helpers
+namespace Secretarium.Helpers
 {
-    public class DiffieHellmanHelper
+    public static class DiffieHellmanHelper
     {
-        public static bool ComputeProofOfWork(byte[] proofOfWorkDetails, out byte[] proof, byte maxAllowedDifficilty = 18)
+        public static bool ComputeProofOfWork(this ProofOfWorkDetails details, out byte[] proof)
         {
-            proof = null;
-
-            if (proofOfWorkDetails.Length != 32)
-                return false;
-
-            var difficulty = proofOfWorkDetails[0];
-            if (difficulty > maxAllowedDifficilty)
-                return false;
-
-            var challenge = proofOfWorkDetails.Extract(1);
-            var computer = new ProofOfWork<SHA256Cng>(difficulty, challenge);
+            var computer = new ProofOfWork<SHA256Cng>(details.difficulty, details.challenge);
 
             return computer.Compute(out proof);
         }

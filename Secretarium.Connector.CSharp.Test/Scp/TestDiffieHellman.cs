@@ -1,12 +1,12 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using System.Security.Cryptography;
-using Secretarium.Client.Helpers;
+using Secretarium.Helpers;
 using NUnit.Framework;
 
-namespace Secretarium.Client.Test.Dev
+namespace Secretarium.Test.Dev
 {
     [TestFixture]
     public class TestECDiffieHellmanCng

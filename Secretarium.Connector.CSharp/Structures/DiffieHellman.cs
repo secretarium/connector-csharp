@@ -1,7 +1,6 @@
-using Secretarium.Client.Helpers;
-using System.Security.Cryptography;
+using Secretarium.Helpers;
 
-namespace Secretarium.Client
+namespace Secretarium
 {
     public class ClientHello
     {
@@ -21,14 +20,26 @@ namespace Secretarium.Client
         }
     }
 
+    public class ProofOfWorkDetails
+    {
+        public byte difficulty { get; set; }
+        public byte[] challenge { get; set; }
+    }
+
     public class ServerHello
     {
-        public byte[] nonce { get; set; }
-        public byte[] proofOfWorkDetails { get; set; }
+        public ProofOfWorkDetails proofOfWorkDetails { get; set; }
 
-        public static bool Parse(byte[] data, out ServerHello p)
+        public static bool Parse(byte[] data, byte maxAllowedDifficilty, out ServerHello p)
         {
-            if (data.Length != 64)
+            if (data.Length != 64) // 32 bytes of nonce ignored
+            {
+                p = null;
+                return false;
+            }
+
+            var difficulty = data[32];
+            if (difficulty > maxAllowedDifficilty)
             {
                 p = null;
                 return false;
@@ -36,8 +47,11 @@ namespace Secretarium.Client
 
             p = new ServerHello
             {
-                nonce = data.Extract(0, 32),
-                proofOfWorkDetails = data.Extract(32, 32)
+                proofOfWorkDetails = new ProofOfWorkDetails
+                {
+                    difficulty = difficulty,
+                    challenge = data.Extract(33)
+                }
             };
 
             return true;

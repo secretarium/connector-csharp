@@ -1,4 +1,4 @@
-﻿using Secretarium.Client.Helpers;
+using Secretarium.Helpers;
 using System;
 using System.Net;
 using System.Security.Authentication;
@@ -6,10 +6,12 @@ using System.Security.Cryptography;
 using System.Threading;
 using WebSocketSharp;
 
-namespace Secretarium.Client
+namespace Secretarium
 {
-    public class SwssConnector : IDisposable
+    public class SecureConnectionProtocol : IDisposable
     {
+        public const byte MaxAllowedPoWDifficilty = 18;
+
         [Flags]
         public enum ConnectionState : uint
         {
@@ -23,7 +25,7 @@ namespace Secretarium.Client
         
         internal static readonly byte[] _hop = new byte[] { 0, 0, 0, 1 };
 
-        internal SwssConfig _config;
+        internal ScpConfig _config;
         internal WebSocket _webSocket;
         internal ECDsaCng _clientECDsa;
 
@@ -34,7 +36,7 @@ namespace Secretarium.Client
         public event Action<byte[]> OnMessage;
         public event Action<ConnectionState> OnStateChange;
 
-        static SwssConnector()
+        static SecureConnectionProtocol()
         {
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
         }
@@ -47,7 +49,7 @@ namespace Secretarium.Client
             OnStateChange?.Invoke(state);
         }
 
-        public bool Init(SwssConfig config)
+        public bool Init(ScpConfig config)
         {
             if (config == null)
                 return false;
@@ -121,7 +123,7 @@ namespace Secretarium.Client
             ServerHello serverHello = null;
             onMessageHandler = (sender, e) =>
             {
-                if (!ServerHello.Parse(e.RawData.Extract(4), out serverHello))
+                if (!ServerHello.Parse(e.RawData.Extract(4), MaxAllowedPoWDifficilty, out serverHello))
                     canContinue = false;
                 signal.Set();
             };

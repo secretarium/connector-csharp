@@ -5,7 +5,7 @@ using System.Numerics;
 using System.Security.Cryptography;
 using NUnit.Framework;
 
-namespace Secretarium.Client.Test
+namespace Secretarium.Test
 {
     public class ECPoint
     {

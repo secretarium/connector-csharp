@@ -1,4 +1,4 @@
-﻿namespace Secretarium.Client.Test
+﻿namespace Secretarium.Test
 {
     public class DCAppForTesting
     {

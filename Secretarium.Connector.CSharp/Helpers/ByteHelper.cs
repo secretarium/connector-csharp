@@ -4,7 +4,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Secretarium.Client.Helpers
+namespace Secretarium.Helpers
 {
     public static class ByteHelper
     {
@@ -37,6 +37,11 @@ namespace Secretarium.Client.Helpers
         public static byte[] ToBytes(this long l)
         {
             return BitConverter.GetBytes(l).ReverseEndianness();
+        }
+
+        public static byte[] ToBytes(this int i)
+        {
+            return BitConverter.GetBytes(i).ReverseEndianness();
         }
 
         public static IEnumerable<T> ReverseChunkWise<T>(this IEnumerable<T> collection, int chunkSz)

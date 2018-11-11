@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.Security.Cryptography;
 
-namespace Secretarium.Client.Helpers
+namespace Secretarium.Helpers
 {
     public static class ECDsaHelper
     {
@@ -50,6 +50,16 @@ namespace Secretarium.Client.Helpers
         {
             var blob = ByteHelper.Combine(P256PrivateMagic, pubKey, priKey);
             var cng = CngKey.Import(blob, CngKeyBlobFormat.EccPrivateBlob);
+            return new ECDsaCng(cng)
+            {
+                HashAlgorithm = CngAlgorithm.Sha256,
+                KeySize = 256
+            };
+        }
+
+        public static ECDsaCng Import(byte[] pkcs8)
+        {
+            var cng = CngKey.Import(pkcs8, CngKeyBlobFormat.Pkcs8PrivateBlob);
             return new ECDsaCng(cng)
             {
                 HashAlgorithm = CngAlgorithm.Sha256,

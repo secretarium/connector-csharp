@@ -1,4 +1,4 @@
-using System.Linq;
+﻿using System.Linq;
 using Secretarium.Helpers;
 using NUnit.Framework;
 using System.Security.Cryptography;
@@ -115,7 +115,7 @@ namespace Secretarium.Test
         public void TestSumCommand()
         {
             var session = FullProtocolFromX509(out byte[] symmetricKey, out MockedSecretarium secretarium);
-            var command = new Request<double[]>("Secretarium.Client.Test.DCAppForTesting", "Sum", new double[] { 1, 2, 3, 4, 5 });
+            var command = new Request<double[]>("Secretarium.Test.DCAppForTesting", "Sum", new double[] { 1, 2, 3, 4, 5 });
             var data = secretarium.RunCommand(command.Encrypt(symmetricKey));
             var sum = data.ParseMessage<double>(symmetricKey);
             Assert.AreEqual(15d, sum.result);
@@ -125,7 +125,7 @@ namespace Secretarium.Test
         public void TestAvgCommand()
         {
             var session = FullProtocolFromX509(out byte[] symmetricKey, out MockedSecretarium secretarium);
-            var command = new Request<double[]>("Secretarium.Client.Test.DCAppForTesting", "Avg", new double[] { 1, 2, 3, 4, 5 });
+            var command = new Request<double[]>("Secretarium.Test.DCAppForTesting", "Avg", new double[] { 1, 2, 3, 4, 5 });
             var data = secretarium.RunCommand(command.Encrypt(symmetricKey));
             var avg = data.ParseMessage<double>(symmetricKey);
             Assert.AreEqual(3d, avg.result);
@@ -136,7 +136,7 @@ namespace Secretarium.Test
         {
             var session = FullProtocolFromX509(out byte[] symmetricKey, out MockedSecretarium secretarium);
             var args = new DCAppForTesting.TextReplaceArgs { FindValue = "def", ReplaceWith = "xyz", Value = "abcdefghi" };
-            var command = new Request<DCAppForTesting.TextReplaceArgs>("Secretarium.Client.Test.DCAppForTesting", "TextReplace", args);
+            var command = new Request<DCAppForTesting.TextReplaceArgs>("Secretarium.Test.DCAppForTesting", "TextReplace", args);
             var data = secretarium.RunCommand(command.Encrypt(symmetricKey));
             var avg = data.ParseMessage<string>(symmetricKey);
             Assert.AreEqual("abcxyzghi", avg.result);

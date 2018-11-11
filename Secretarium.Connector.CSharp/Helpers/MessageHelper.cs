@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Secretarium.Client.Helpers
+namespace Secretarium.Helpers
 {
     public static class MessageHelper
     {

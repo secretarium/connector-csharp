@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Security.Cryptography;
 
-namespace Secretarium.Client.Helpers
+namespace Secretarium.Helpers
 {
     public class ProofOfWork<T> where T : HashAlgorithm
     {

@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.IO;
-using System.Linq;
-using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
 
-namespace Secretarium.Client.Helpers
+namespace Secretarium.Helpers
 {
     public static class JsonHelper
     {

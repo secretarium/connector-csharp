@@ -1,8 +1,7 @@
-﻿using Secretarium.Client.Helpers;
-using System;
+﻿using Secretarium.Helpers;
 using System.Threading;
 
-namespace Secretarium.Client
+namespace Secretarium
 {
     public class Request
     {

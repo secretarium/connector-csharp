@@ -2,7 +2,7 @@
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Security;
 
-namespace Secretarium.Client.Helpers
+namespace Secretarium.Helpers
 {
     public static class AESCTRHelper
     {
