@@ -23,12 +23,12 @@ namespace Secretarium.Helpers
 
         public static byte[] HashSha256(this int i)
         {
-            return Sha256.ComputeHash(i.ToBytes());
+            return Sha256.ComputeHash(i.ToString("N6").ToBytes());
         }
 
         public static byte[] HashSha256(this long l)
         {
-            return Sha256.ComputeHash(l.ToBytes());
+            return Sha256.ComputeHash(l.ToString("N6").ToBytes());
         }
 
         public static byte[] HashSha256(this double d)

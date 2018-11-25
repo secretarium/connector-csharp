@@ -3,7 +3,7 @@ using System.Threading;
 
 namespace Secretarium
 {
-    public class Request
+    public abstract class RequestBase
     {
         public static long Counter = 0;
 
@@ -11,7 +11,7 @@ namespace Secretarium
         public string dcapp { get; private set; }
         public string function { get; private set; }
 
-        public Request(string dcapp, string function)
+        public RequestBase(string dcapp, string function)
         {
             requestId = Interlocked.Increment(ref Counter).ToBytes().ToBase64String();
             this.dcapp = dcapp;
@@ -19,7 +19,22 @@ namespace Secretarium
         }
     }
 
-    public class Request<T> : Request where T : class
+    public class Request : RequestBase
+    {
+        public string argsJson { get; private set; }
+
+        public Request(string dcapp, string function, string argsJson) : base(dcapp, function)
+        {
+            this.argsJson = argsJson;
+        }
+
+        public string ToJson()
+        {
+            return "{\"requestId\":\"" + requestId + "\",\"dcapp\":\"" + dcapp + "\",\"function\":\"" + function + "\",\"args\":" + argsJson + "}";
+        }
+    }
+
+    public class Request<T> : RequestBase where T : class
     {
         public T args { get; private set; }
 

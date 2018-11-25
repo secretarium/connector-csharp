@@ -270,6 +270,12 @@ namespace Secretarium
             _webSocket.Send(encryptedWithHop);
         }
 
+        public bool Ping()
+        {
+            if (_webSocket == null) return false;
+            return _webSocket.Ping();
+        }
+
         public void Dispose()
         {
             Disconnect();
