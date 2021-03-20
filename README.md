@@ -1,2 +1,2 @@
-# Secretarium.Connector.CSharp
-C# connector
+# Secretarium C#/.Net/Mono Connector
+
