@@ -1,0 +1,13 @@
+﻿{
+  "encryptionMode": 1,
+  "secretarium": {
+    "endPoint": "wss://secretarium.dev:5428/",
+    "knownPubKey": "rliD_CISqPEeYKbWYdwa-L-8oytAPvdGmbLC0KdvsH-OVMraarm1eo-q4fte0cWJ7-kmsq8wekFIJK0a83_yCg=="
+  },
+  "keys": {
+    "password": "1234",
+    "iv": "RW5wYm/bMjjrm18i",
+    "salt": "JKaOiERkax4xlEuSg2Z/R8/vS4/PtwE+Gzgy2Z1g+6E=",
+    "keys": "pugy+XKkQ3xCEoPoojbW0He50lP1393+y5KjQ3Cd/+PgR2IpZ0ZJtvVFM1H90hUxOGJyeyy/Y0KM+j6C3ufeS+yUq8wD76tWg2z7pQ5ZeYnqrfaGLdY97JJl0nDguSD3fcQjP5z323iVqstj6Rin0qgfgjvly6GPYcWC21znrdzLceeqvgKjqLbVa2BpTaZb7Ir2v9kvKxVQaWu4N5XX7FTpBjc/oqYw56yW//4VvTEODi+B9mP9XBRLC3ZC8C2ZfrdKAW1ezS+qakL0uBLMbUV5cH+ekLBIY3lz"
+  }
+}

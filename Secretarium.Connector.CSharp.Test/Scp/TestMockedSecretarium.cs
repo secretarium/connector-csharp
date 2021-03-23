@@ -10,8 +10,8 @@ namespace Secretarium.Test
     {
         #region Test Diffiehellman
 
-        [Test]
-        public void TestKeyExchange()
+        [Theory]
+        public void TestKeyExchange(ScpConfig.EncryptionMode encryptionMode)
         {
             // Client side
             var clientEph = ECDHHelper.CreateCngKey();
@@ -19,7 +19,7 @@ namespace Secretarium.Test
             var clientEphPubKey = clientEphCng.PublicKey();
 
             // Server side
-            var secretarium = new MockedSecretarium();
+            var secretarium = new MockedSecretarium(encryptionMode);
             Assert.IsTrue(secretarium.GetServerHello(clientEphPubKey, out byte[] serverHello));
             Assert.IsTrue(ServerHello.Parse(serverHello, 18, out ServerHello serverHelloObj));
 
@@ -39,7 +39,7 @@ namespace Secretarium.Test
             Assert.IsTrue(symmetricKey.SequenceEqual(secretarium.Session.SymmetricKey));
         }
         
-        private bool FullProtocolFromX509(out byte[] symmetricKey, out MockedSecretarium secretarium)
+        private bool FullProtocolFromX509(ScpConfig.EncryptionMode encryptionMode, out byte[] symmetricKey, out MockedSecretarium secretarium)
         {
             // Client keys
             Assert.IsTrue(ScpConfigHelper.TryLoad("test.x509.json", out ScpConfig config));
@@ -54,7 +54,7 @@ namespace Secretarium.Test
             Assert.IsTrue(ClientHello.Parse(clientHello, out ClientHello clientHelloObj));
 
             // Server Hello
-            secretarium = new MockedSecretarium();
+            secretarium = new MockedSecretarium(encryptionMode);
             secretarium.GetServerHello(clientHello, out byte[] serverHello);
             Assert.IsTrue(ServerHello.Parse(serverHello, 18, out ServerHello serverHelloObj));
 
@@ -79,7 +79,9 @@ namespace Secretarium.Test
 
             // Client Encrypts Client Proof Of Identity
             var ivOffset = ByteHelper.GetRandom(16);
-            var encryptedClientProofOfIdentity = clientProofOfIdentity.AesCtrEncrypt(symmetricKey, ivOffset);
+            var encryptedClientProofOfIdentity = encryptionMode == ScpConfig.EncryptionMode.AESCTR
+                ? clientProofOfIdentity.AesCtrEncrypt(symmetricKey, ivOffset)
+                : clientProofOfIdentity.AesGcmEncryptWithOffset(symmetricKey, ivOffset);
             var encryptedClientProofOfIdentityWithIvOffset = ByteHelper.Combine(ivOffset, encryptedClientProofOfIdentity);
 
             // Server Checks And Sends Proof Of Identity
@@ -88,7 +90,9 @@ namespace Secretarium.Test
 
             // Client Decrypts Server Proof Of Identity
             ivOffset = encryptedServerProofOfIdentity.Extract(0, 16);
-            var serverProofOfIdentity = encryptedServerProofOfIdentity.Extract(16).AesCtrDecrypt(symmetricKey, ivOffset);
+            var serverProofOfIdentity = encryptionMode == ScpConfig.EncryptionMode.AESCTR
+                ? encryptedServerProofOfIdentity.Extract(16).AesCtrDecrypt(symmetricKey, ivOffset)
+                : encryptedServerProofOfIdentity.Extract(16).AesGcmDecryptWithOffset(symmetricKey, ivOffset);
             Assert.IsTrue(ServerProofOfIdentity.Parse(serverProofOfIdentity, out ServerProofOfIdentity serverProofOfIdentityObj));
 
             // Client Checks Server Proof Of Idendity
@@ -100,10 +104,10 @@ namespace Secretarium.Test
             return true;
         }
         
-        [Test]
-        public void TestFullProtocolFromX509()
+        [Theory]
+        public void TestFullProtocolFromX509(ScpConfig.EncryptionMode encryptionMode)
         {
-            var session = FullProtocolFromX509(out byte[] symmetricKey, out MockedSecretarium secretarium);
+            var session = FullProtocolFromX509(encryptionMode, out byte[] symmetricKey, out MockedSecretarium secretarium);
             Assert.IsNotNull(session);
         }
 
@@ -111,34 +115,34 @@ namespace Secretarium.Test
 
         #region Test Commands
 
-        [Test]
-        public void TestSumCommand()
+        [Theory]
+        public void TestSumCommand(ScpConfig.EncryptionMode encryptionMode)
         {
-            var session = FullProtocolFromX509(out byte[] symmetricKey, out MockedSecretarium secretarium);
+            var session = FullProtocolFromX509(encryptionMode, out byte[] symmetricKey, out MockedSecretarium secretarium);
             var command = new Request<double[]>("Secretarium.Test.DCAppForTesting", "Sum", new double[] { 1, 2, 3, 4, 5 });
-            var data = secretarium.RunCommand(command.Encrypt(symmetricKey));
-            var sum = data.ParseMessage<double>(symmetricKey);
+            var data = secretarium.RunCommand(command.Encrypt(symmetricKey, encryptionMode));
+            var sum = data.ParseMessage<double>(symmetricKey, encryptionMode);
             Assert.AreEqual(15d, sum.result);
         }
 
-        [Test]
-        public void TestAvgCommand()
+        [Theory]
+        public void TestAvgCommand(ScpConfig.EncryptionMode encryptionMode)
         {
-            var session = FullProtocolFromX509(out byte[] symmetricKey, out MockedSecretarium secretarium);
+            var session = FullProtocolFromX509(encryptionMode, out byte[] symmetricKey, out MockedSecretarium secretarium);
             var command = new Request<double[]>("Secretarium.Test.DCAppForTesting", "Avg", new double[] { 1, 2, 3, 4, 5 });
-            var data = secretarium.RunCommand(command.Encrypt(symmetricKey));
-            var avg = data.ParseMessage<double>(symmetricKey);
+            var data = secretarium.RunCommand(command.Encrypt(symmetricKey, encryptionMode));
+            var avg = data.ParseMessage<double>(symmetricKey, encryptionMode);
             Assert.AreEqual(3d, avg.result);
         }
 
-        [Test]
-        public void TestTextReplaceCommand()
+        [Theory]
+        public void TestTextReplaceCommand(ScpConfig.EncryptionMode encryptionMode)
         {
-            var session = FullProtocolFromX509(out byte[] symmetricKey, out MockedSecretarium secretarium);
+            var session = FullProtocolFromX509(encryptionMode, out byte[] symmetricKey, out MockedSecretarium secretarium);
             var args = new DCAppForTesting.TextReplaceArgs { FindValue = "def", ReplaceWith = "xyz", Value = "abcdefghi" };
             var command = new Request<DCAppForTesting.TextReplaceArgs>("Secretarium.Test.DCAppForTesting", "TextReplace", args);
-            var data = secretarium.RunCommand(command.Encrypt(symmetricKey));
-            var avg = data.ParseMessage<string>(symmetricKey);
+            var data = secretarium.RunCommand(command.Encrypt(symmetricKey, encryptionMode));
+            var avg = data.ParseMessage<string>(symmetricKey, encryptionMode);
             Assert.AreEqual("abcxyzghi", avg.result);
         }
 

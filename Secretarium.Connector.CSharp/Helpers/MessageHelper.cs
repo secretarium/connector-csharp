@@ -14,10 +14,12 @@ namespace Secretarium.Helpers
             return convertor == null ? data.GetUtf8String().DeserializeJsonAs<Result<T>>() : convertor(data);
         }
 
-        internal static Result<T> ParseMessage<T>(this byte[] data, byte[] symmetricKey, Func<byte[], T> convertor = null)
+        internal static Result<T> ParseMessage<T>(this byte[] data, byte[] symmetricKey, ScpConfig.EncryptionMode encryptionMode, Func<byte[], T> convertor = null)
         {
             var ivOffset = data.Extract(0, 16);
-            var decrypted = data.Extract(16).AesCtrDecrypt(symmetricKey, ivOffset);
+            var decrypted = encryptionMode == ScpConfig.EncryptionMode.AESCTR
+                ? data.Extract(16).AesCtrDecrypt(symmetricKey, ivOffset)
+                : data.Extract(16).AesGcmDecryptWithOffset(symmetricKey, ivOffset);
             return ParseMessage<T>(decrypted);
         }
     }

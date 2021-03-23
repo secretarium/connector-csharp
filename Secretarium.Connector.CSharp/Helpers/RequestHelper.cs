@@ -7,10 +7,12 @@
             return command.ToJson().ToBytes();
         }
 
-        public static byte[] Encrypt<T>(this Request<T> command, byte[] symmetricKey) where T : class
+        public static byte[] Encrypt<T>(this Request<T> command, byte[] symmetricKey, ScpConfig.EncryptionMode encryptionMode) where T : class
         {
             var ivOffset = ByteHelper.GetRandom(16);
-            var encryptedCmd = command.ToBytes().AesCtrEncrypt(symmetricKey, ivOffset);
+            var encryptedCmd = encryptionMode == ScpConfig.EncryptionMode.AESCTR
+                ? command.ToBytes().AesCtrEncrypt(symmetricKey, ivOffset)
+                : command.ToBytes().AesGcmEncryptWithOffset(symmetricKey, ivOffset);
             return ByteHelper.Combine(ivOffset, encryptedCmd);
         }
     }

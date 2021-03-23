@@ -139,9 +139,10 @@ namespace Secretarium
         public byte[] ivOffset { get; set; }
         public byte[] encryptedPayload { get; set; }
 
-        public static bool Parse(byte[] data, out ServerProofOfIdentityEncrypted p)
+        public static bool Parse(byte[] data, ScpConfig.EncryptionMode encryption, out ServerProofOfIdentityEncrypted p)
         {
-            if (data.Length != 112)
+            if (encryption == ScpConfig.EncryptionMode.AESCTR && data.Length != 112 || 
+                encryption == ScpConfig.EncryptionMode.AESGCM && data.Length != 128)
             {
                 p = null;
                 return false;

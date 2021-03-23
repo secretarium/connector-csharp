@@ -2,9 +2,16 @@ namespace Secretarium
 {
     public class ScpConfig
     {
+        public EncryptionMode encryptionMode { get; set; }
         public ClientConfig client { get; set; }
         public SecretariumConfig secretarium { get; set; }
         public KeyConfig keys { get; set; }
+
+        public enum EncryptionMode
+        {
+            AESCTR = 0,
+            AESGCM = 1
+        }
 
         public class ClientConfig
         {

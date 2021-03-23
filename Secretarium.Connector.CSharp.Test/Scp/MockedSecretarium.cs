@@ -33,6 +33,7 @@ namespace Secretarium.Test
         public static byte[] GenesisPubKey;
 
         public Session Session { get; }
+        public ScpConfig.EncryptionMode EncryptionMode { get; }
 
         static MockedSecretarium()
         {
@@ -42,9 +43,10 @@ namespace Secretarium.Test
                 SecretariumPrivateKeyBase64.FromBase64String().ReverseEndianness());
         }
 
-        public MockedSecretarium()
+        public MockedSecretarium(ScpConfig.EncryptionMode encryptionMode)
         {
             Session = new Session();
+            EncryptionMode = encryptionMode;
         }
 
         public bool GetServerHello(byte[] clientHello, out byte[] serverHello)
@@ -104,8 +106,9 @@ namespace Secretarium.Test
 
             // Decrypt Client Finished message signed with symmetric key
             var ivOffset = encryptedClientProofOfIdentity.Extract(0, 16);
-            var clientProofOfIdentity = encryptedClientProofOfIdentity.Extract(16)
-                .AesCtrDecrypt(Session.SymmetricKey, ivOffset);
+            var clientProofOfIdentity = EncryptionMode == ScpConfig.EncryptionMode.AESCTR
+                ? encryptedClientProofOfIdentity.Extract(16).AesCtrDecrypt(Session.SymmetricKey, ivOffset)
+                : encryptedClientProofOfIdentity.Extract(16).AesGcmDecryptWithOffset(Session.SymmetricKey, ivOffset);
 
             if (!ClientProofOfIdentity.Parse(clientProofOfIdentity, out ClientProofOfIdentity cpoi))
                 return false;
@@ -130,7 +133,10 @@ namespace Secretarium.Test
             ivOffset = ByteHelper.GetRandom(16);
 
             // Encrypt
-            var encrypted = ByteHelper.Combine(nonce, signed).AesCtrEncrypt(Session.SymmetricKey, ivOffset);
+            var combined = ByteHelper.Combine(nonce, signed);
+            var encrypted = EncryptionMode == ScpConfig.EncryptionMode.AESCTR
+                ? combined.AesCtrEncrypt(Session.SymmetricKey, ivOffset)
+                : combined.AesGcmEncryptWithOffset(Session.SymmetricKey, ivOffset);
 
             serverProofOfIdentity = ByteHelper.Combine(ivOffset, encrypted);
 
@@ -143,7 +149,9 @@ namespace Secretarium.Test
             var command = data.Extract(16);
 
             // Decrypt the command
-            var decrypted = command.AesCtrDecrypt(Session.SymmetricKey, ivOffset);
+            var decrypted = EncryptionMode == ScpConfig.EncryptionMode.AESCTR
+                ? command.AesCtrDecrypt(Session.SymmetricKey, ivOffset)
+                : command.AesGcmDecryptWithOffset(Session.SymmetricKey, ivOffset);
             var commandJson = decrypted.DeserializeJsonAs<Request>();
             if (commandJson == null || string.IsNullOrEmpty(commandJson.function))
                 return null;
@@ -180,7 +188,9 @@ namespace Secretarium.Test
                 
                 // Encrypt
                 ivOffset = ByteHelper.GetRandom(16);
-                var encryptedResult = ((byte[])result).AesCtrEncrypt(Session.SymmetricKey, ivOffset);
+                var encryptedResult = EncryptionMode == ScpConfig.EncryptionMode.AESCTR
+                    ? ((byte[])result).AesCtrEncrypt(Session.SymmetricKey, ivOffset)
+                    : ((byte[])result).AesGcmEncryptWithOffset(Session.SymmetricKey, ivOffset);
 
                 // Return result dataInputId
                 return ByteHelper.Combine(ivOffset, encryptedResult);

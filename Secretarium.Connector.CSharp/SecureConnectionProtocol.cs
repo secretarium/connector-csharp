@@ -178,12 +178,14 @@ namespace Secretarium
             var nonceSigned = _clientECDsa.SignData(nonce);
             var clientProofOfIdentity = ByteHelper.Combine(nonce, clientEphPub, clientPub, nonceSigned);
             var ivOffset = ByteHelper.GetRandom(16);
-            var encryptedClientProofOfIdentity = clientProofOfIdentity.AesCtrEncrypt(SymmetricKey, ivOffset);
+            var encryptedClientProofOfIdentity = _config.encryptionMode == ScpConfig.EncryptionMode.AESCTR
+                ? clientProofOfIdentity.AesCtrEncrypt(SymmetricKey, ivOffset)
+                : clientProofOfIdentity.AesGcmEncryptWithOffset(SymmetricKey, ivOffset);
             var encryptedClientProofOfIdentityWithIvOffset = ByteHelper.Combine(_hop, ivOffset, encryptedClientProofOfIdentity);
             ServerProofOfIdentityEncrypted serverProofOfIdentityEncrypted = null;
             onMessageHandler = (sender, e) =>
             {
-                if (!ServerProofOfIdentityEncrypted.Parse(e.RawData.Extract(4), out serverProofOfIdentityEncrypted))
+                if (!ServerProofOfIdentityEncrypted.Parse(e.RawData.Extract(4), _config.encryptionMode, out serverProofOfIdentityEncrypted))
                     canContinue = false;
                 signal.Set();
             };
@@ -201,8 +203,9 @@ namespace Secretarium
             _webSocket.OnError -= onErrorHandler;
 
             // -7- Decrypt Server Proof Of Identity
-            var serverProofOfIdentityDecrypted = serverProofOfIdentityEncrypted.encryptedPayload
-                .AesCtrDecrypt(SymmetricKey, serverProofOfIdentityEncrypted.ivOffset);
+            var serverProofOfIdentityDecrypted = _config.encryptionMode == ScpConfig.EncryptionMode.AESCTR
+                ? serverProofOfIdentityEncrypted.encryptedPayload.AesCtrDecrypt(SymmetricKey, serverProofOfIdentityEncrypted.ivOffset)
+                : serverProofOfIdentityEncrypted.encryptedPayload.AesGcmDecryptWithOffset(SymmetricKey, serverProofOfIdentityEncrypted.ivOffset);
             if (!ServerProofOfIdentity.Parse(serverProofOfIdentityDecrypted, out ServerProofOfIdentity serverProofOfIdentity))
             {
                 _webSocket.Close();
@@ -228,7 +231,9 @@ namespace Secretarium
             _webSocket.OnMessage += (sender, e) =>
             {
                 var offset = e.RawData.Extract(4, 16);
-                var decrypted = e.RawData.Extract(20).AesCtrDecrypt(SymmetricKey, offset);
+                var decrypted = _config.encryptionMode == ScpConfig.EncryptionMode.AESCTR
+                    ? e.RawData.Extract(20).AesCtrDecrypt(SymmetricKey, offset)
+                    : e.RawData.Extract(20).AesGcmDecryptWithOffset(SymmetricKey, offset);
                 try
                 {
                     OnMessage?.Invoke(decrypted);
@@ -254,14 +259,16 @@ namespace Secretarium
         }
         public string Send<T>(Request<T> command) where T : class
         {
-            var encrypted = command.Encrypt(SymmetricKey);
+            var encrypted = command.Encrypt(SymmetricKey, _config.encryptionMode);
             Send(encrypted);
             return command.requestId;
         }
         public void Send(string request)
         {
             var ivOffset = ByteHelper.GetRandom(16);
-            var encryptedCmd = request.ToBytes().AesCtrEncrypt(SymmetricKey, ivOffset);
+            var encryptedCmd = _config.encryptionMode == ScpConfig.EncryptionMode.AESCTR
+                ? request.ToBytes().AesCtrEncrypt(SymmetricKey, ivOffset)
+                : request.ToBytes().AesGcmEncryptWithOffset(SymmetricKey, ivOffset);
             Send(ByteHelper.Combine(ivOffset, encryptedCmd));
         }
         public void Send(byte[] encrypted)
