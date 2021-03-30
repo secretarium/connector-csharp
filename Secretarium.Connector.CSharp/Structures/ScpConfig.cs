@@ -5,7 +5,11 @@ namespace Secretarium
         public EncryptionMode encryptionMode { get; set; }
         public ClientConfig client { get; set; }
         public SecretariumConfig secretarium { get; set; }
-        public KeyConfig keys { get; set; }
+
+        // client auth
+        public SecretariumKeyConfig secretariumKey { get; set; }
+        public Certificate certificate { get; set; }
+        public RawKeyConfig rawKeys { get; set; }
 
         public enum EncryptionMode
         {
@@ -24,18 +28,22 @@ namespace Secretarium
             public string knownPubKey { get; set; }
         }
 
-        public class KeyConfig
+        public class SecretariumKeyConfig
         {
-            // Secretarium key
+            public string name { get; set; }
+            public string version { get; set; }
             public string iv { get; set; }
             public string salt { get; set; }
             public string keys { get; set; }
-            public string password { get; set; }
+        }
 
-            // Pfx file
+        public class Certificate
+        {
             public string pfxFile { get; set; }
+        }
 
-            // ECDSA key
+        public class RawKeyConfig
+        {
             public string publicKey { get; set; }
             public string privateKey { get; set; }
         }

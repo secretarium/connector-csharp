@@ -8,9 +8,9 @@ namespace Secretarium.Helpers
         public static byte[] P256PublicMagic = ByteHelper.Combine(BitConverter.GetBytes(CngHelper.BCRYPT_ECDH_PUBLIC_P256_MAGIC), CngHelper.P256_KEY_LENGTH);
         public static byte[] P256PrivateMagic = ByteHelper.Combine(BitConverter.GetBytes(CngHelper.BCRYPT_ECDH_PRIVATE_P256_MAGIC), CngHelper.P256_KEY_LENGTH);
 
-        public static byte[] PublicKey(this ECDiffieHellmanCng cng, bool includeProlog = false)
+        public static byte[] PublicKey(this ECDiffieHellmanCng cng)
         {
-            return cng.Key.PublicKey(includeProlog);
+            return cng.Key.ExportPublicKeyRaw();
         }
         
         public static CngKey CreateCngKey(string name = null, bool allowExport = false)

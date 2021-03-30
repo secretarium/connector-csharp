@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.Win32.SafeHandles;
+using System;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 
 namespace Secretarium.Helpers
@@ -35,22 +37,125 @@ namespace Secretarium.Helpers
         public static int BCRYPT_RSAFULLPRIVATE_MAGIC = 0x33415352;
         public static int BCRYPT_KEY_DATA_BLOB_MAGIC = 0x4d42444b;
 
-        public static byte[] PublicKey(this CngKey key, bool includeProlog = false)
+        public static byte[] ExportPublicKeyRaw(this CngKey key)
         {
-            var publicKeyWithProlog = key.Export(CngKeyBlobFormat.EccPublicBlob);
-            
-            if (includeProlog)
-                return publicKeyWithProlog;
-
-            var publicKey = new byte[64];
-            Array.Copy(publicKeyWithProlog, 8, publicKey, 0, publicKey.Length);
-
-            return publicKey;
+            return key.Export(CngKeyBlobFormat.EccPublicBlob).Extract(8 /* remove prolog */);
         }
         
+        public static byte[] ExportPrivateKeyRaw(this CngKey key)
+        {
+            return key.ForceExport(CngKeyBlobFormat.EccPrivateBlob).Extract(8 + 64 /* remove prolog and public key */);
+        }
+
+        public static unsafe byte[] ForceExport(this CngKey key, CngKeyBlobFormat format)
+        {
+            if ((key.ExportPolicy & CngExportPolicies.AllowPlaintextExport) != 0)
+                return key.Export(format);
+
+            // The key is not exportable, lets hack. Thanks @bartonjs
+            // https://stackoverflow.com/questions/57269726/x509certificate2-import-with-ncrypt-allow-plaintext-export-flag
+            // https://stackoverflow.com/questions/55236230/export-private-key-pkcs8-of-cng-rsa-certificate-with-oldschool-net
+
+            string blobType = "PKCS8_PRIVATEKEY";
+
+            try
+            {
+                byte[] exported;
+
+                fixed (byte* oidPtr = CryptNativeHelpers.PKCS12_3DES_OID)
+                {
+                    var salt = ByteHelper.GetRandom(CryptNativeHelpers.NCrypt.PbeParams.RgbSaltSize);
+                    var pbeParams = new CryptNativeHelpers.NCrypt.PbeParams();
+                    pbeParams.Params.iIterations = 1;
+                    pbeParams.Params.cbSalt = salt.Length;
+                    Marshal.Copy(salt, 0, (IntPtr)pbeParams.rgbSalt, salt.Length);
+
+                    var buffers = stackalloc CryptNativeHelpers.NCrypt.NCryptBuffer[3];
+                    buffers[0] = new CryptNativeHelpers.NCrypt.NCryptBuffer
+                    {
+                        BufferType = CryptNativeHelpers.NCrypt.BufferType.PkcsSecret,
+                        cbBuffer = 0,
+                        pvBuffer = IntPtr.Zero,
+                    };
+                    buffers[1] = new CryptNativeHelpers.NCrypt.NCryptBuffer
+                    {
+                        BufferType = CryptNativeHelpers.NCrypt.BufferType.PkcsAlgOid,
+                        cbBuffer = CryptNativeHelpers.PKCS12_3DES_OID.Length,
+                        pvBuffer = (IntPtr)oidPtr,
+                    };
+                    buffers[2] = new CryptNativeHelpers.NCrypt.NCryptBuffer
+                    {
+                        BufferType = CryptNativeHelpers.NCrypt.BufferType.PkcsAlgParam,
+                        cbBuffer = sizeof(CryptNativeHelpers.NCrypt.PbeParams),
+                        pvBuffer = (IntPtr)(&pbeParams),
+                    };
+                    var desc = new CryptNativeHelpers.NCrypt.NCryptBufferDesc
+                    {
+                        cBuffers = 3,
+                        pBuffers = (IntPtr)buffers,
+                        ulVersion = 0,
+                    };
+
+                    if (CryptNativeHelpers.NCrypt.NCryptExportKey(key.Handle, IntPtr.Zero, blobType, ref desc, null, 0, out int bytesNeeded, 0) != 0)
+                        return null;
+
+                    exported = new byte[bytesNeeded];
+                    if (CryptNativeHelpers.NCrypt.NCryptExportKey(key.Handle, IntPtr.Zero, blobType, ref desc, exported, exported.Length, out bytesNeeded, 0) != 0)
+                        return null;
+                }
+
+                fixed (char* keyNamePtr = key.KeyName)
+                fixed (byte* blobPtr = exported)
+                {
+                    var buffers = stackalloc CryptNativeHelpers.NCrypt.NCryptBuffer[2];
+                    buffers[0] = new CryptNativeHelpers.NCrypt.NCryptBuffer
+                    {
+                        BufferType = CryptNativeHelpers.NCrypt.BufferType.PkcsSecret,
+                        cbBuffer = 0,
+                        pvBuffer = IntPtr.Zero,
+                    };
+                    buffers[1] = new CryptNativeHelpers.NCrypt.NCryptBuffer
+                    {
+                        BufferType = CryptNativeHelpers.NCrypt.BufferType.PkcsName,
+                        cbBuffer = checked(2 * (key.KeyName.Length + 1)),
+                        pvBuffer = new IntPtr(keyNamePtr),
+                    };
+                    var desc = new CryptNativeHelpers.NCrypt.NCryptBufferDesc
+                    {
+                        cBuffers = 2,
+                        pBuffers = (IntPtr)buffers,
+                        ulVersion = 0,
+                    };
+
+                    SafeNCryptKeyHandle keyHandle;
+                    if (CryptNativeHelpers.NCrypt.NCryptImportKey(key.ProviderHandle, IntPtr.Zero, blobType, ref desc, out keyHandle, new IntPtr(blobPtr), exported.Length,
+                        CryptNativeHelpers.NCrypt.NCryptImportFlags.NCRYPT_OVERWRITE_KEY_FLAG | CryptNativeHelpers.NCrypt.NCryptImportFlags.NCRYPT_DO_NOT_FINALIZE_FLAG) != 0)
+                    {
+                        keyHandle.Dispose();
+                        return null;
+                    }
+
+                    using (keyHandle)
+                    using (CngKey cngKey = CngKey.Open(keyHandle, CngKeyHandleOpenOptions.None))
+                    {
+                        cngKey.SetProperty(new CngProperty("Export Policy", BitConverter.GetBytes((int)CngExportPolicies.AllowPlaintextExport), CngPropertyOptions.Persist));
+
+                        if (CryptNativeHelpers.NCrypt.NCryptFinalizeKey(keyHandle, 0) != 0)
+                            return null;
+
+                        return cngKey.Export(format);
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
         public static CngKey CreateCngKey(CngAlgorithm algorithm, string name = null, bool allowExport = false)
         {
-            if(!allowExport)
+            if (!allowExport)
                 return CngKey.Create(algorithm, name);
 
             return CngKey.Create(algorithm, name, new CngKeyCreationParameters { ExportPolicy = CngExportPolicies.AllowPlaintextExport });

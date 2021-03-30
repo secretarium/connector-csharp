@@ -31,7 +31,7 @@ namespace Secretarium
 
         public byte[] SymmetricKey { get; internal set; }
         public ConnectionState State { get; private set; }
-        public string PublicKey { get { return _clientECDsa?.PublicKey().ToBase64String(); } }
+        public string PublicKey { get { return _clientECDsa?.ExportPublicKeyRaw().ToBase64String(); } }
 
         public event Action<byte[]> OnMessage;
         public event Action<ConnectionState> OnStateChange;
@@ -69,6 +69,10 @@ namespace Secretarium
             _clientECDsa = key;
 
             return true;
+        }
+        public bool Set(byte[] ecdsaPubKeyRaw, byte[] ecdsaPriKeyRaw)
+        {
+            return Set(ECDsaHelper.ImportPrivateKey(ecdsaPubKeyRaw, ecdsaPriKeyRaw));
         }
 
         public bool Connect(int timeout = 3000)
@@ -118,7 +122,7 @@ namespace Secretarium
             UpdateState(ConnectionState.SecureConnectionInProgress);
             var clientEphCngKey = ECDHHelper.CreateCngKey();
             var clientEphCng = ECDHHelper.CreateECDiffieHellmanCngSha256(clientEphCngKey);
-            var clientEphPub = clientEphCngKey.PublicKey();
+            var clientEphPub = clientEphCngKey.ExportPublicKeyRaw();
             var clientHello = ByteHelper.Combine(_hop, clientEphPub);
             ServerHello serverHello = null;
             onMessageHandler = (sender, e) =>
@@ -173,7 +177,7 @@ namespace Secretarium
                 clientEphCng, serverIdentity.ephDHKey, serverIdentity.preMasterSecret);
 
             // -6- Send Client Proof Of Identity
-            var clientPub = _clientECDsa.Key.PublicKey();
+            var clientPub = _clientECDsa.Key.ExportPublicKeyRaw();
             var nonce = ByteHelper.GetRandom(32);
             var nonceSigned = _clientECDsa.SignData(nonce);
             var clientProofOfIdentity = ByteHelper.Combine(nonce, clientEphPub, clientPub, nonceSigned);
@@ -215,7 +219,7 @@ namespace Secretarium
             // -8- Check Server Proof Of Identity
             var msg = "Hey you! Welcome to Secretarium!".ToBytes();
             var toVerify = ByteHelper.Combine(serverProofOfIdentity.nonce, msg);
-            var secretariumECDsaCng = serverIdentity.publicKey.ToECDsaCngKey();
+            var secretariumECDsaCng = ECDsaHelper.ImportPublicKey(serverIdentity.publicKey);
             if (!secretariumECDsaCng.VerifyData(toVerify, serverProofOfIdentity.welcomeSigned))
             {
                 _webSocket.Close();

@@ -21,7 +21,7 @@ namespace Secretarium.Helpers
                 var key = publicKeyPath.Extract(i, 64);
                 var proof = publicKeyPath.Extract(i + 64, 64);
                 var keyChild = publicKeyPath.Extract(i + 128, 64);
-                if (!key.ToECDsaCngKey().VerifyData(keyChild, proof))
+                if (!ECDsaHelper.ImportPublicKey(key).VerifyData(keyChild, proof))
                     return false;
             }
             return true;

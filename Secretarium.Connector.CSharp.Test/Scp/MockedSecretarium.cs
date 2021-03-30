@@ -38,9 +38,8 @@ namespace Secretarium.Test
         static MockedSecretarium()
         {
             GenesisPubKey = SecretariumPublicKeyBase64.FromBase64String().ReverseEndianness();
-            SecretariumKey = ECDsaHelper.Import(
-                GenesisPubKey, 
-                SecretariumPrivateKeyBase64.FromBase64String().ReverseEndianness());
+            var privateKey = SecretariumPrivateKeyBase64.FromBase64String().ReverseEndianness();
+            SecretariumKey = ECDsaHelper.ImportPrivateKey(GenesisPubKey, privateKey);
         }
 
         public MockedSecretarium(ScpConfig.EncryptionMode encryptionMode)
@@ -118,7 +117,7 @@ namespace Secretarium.Test
                 return false;
 
             // Verify signature
-            var clientsECDsaCng = cpoi.publicKey.ToECDsaCngKey();
+            var clientsECDsaCng = ECDsaHelper.ImportPublicKey(cpoi.publicKey);
             if (!clientsECDsaCng.VerifyData(cpoi.nonce, cpoi.nonceSigned))
                 return false;
 

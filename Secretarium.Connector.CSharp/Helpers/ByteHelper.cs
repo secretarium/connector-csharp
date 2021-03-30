@@ -83,6 +83,22 @@ namespace Secretarium.Helpers
             return c;
         }
 
+        public static byte[] Append(this byte[] src, params byte[][] arrays)
+        {
+            var d = new byte[src.Length + arrays.Sum(a => a.Length)];
+
+            Buffer.BlockCopy(src, 0, d, 0, src.Length);
+
+            int offset = src.Length;
+            foreach (var a in arrays)
+            {
+                Buffer.BlockCopy(a, 0, d, offset, a.Length);
+                offset += a.Length;
+            }
+
+            return d;
+        }
+
         public static byte[] GetRandom(int length)
         {
             var a = new byte[length];

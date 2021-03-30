@@ -1,0 +1,11 @@
+﻿{
+  "secretarium": {
+    "endPoint": "wss://secretarium.dev:5428/",
+    "knownPubKey": "rliD_CISqPEeYKbWYdwa-L-8oytAPvdGmbLC0KdvsH-OVMraarm1eo-q4fte0cWJ7-kmsq8wekFIJK0a83_yCg=="
+  },
+  "secretariumKey": {
+    "iv": "26Ped+gj1YZbAa+x",
+    "salt": "0P/pPSWfv+roCt/21W6a2CrAgSVFbOPgQndoUGLlN9g=",
+    "keys": "H0th06+M+vdJ+aCFWyqP2xJh9VSQJH70wRXpdJhNTISsE2VM+5Ae0sl44HP39NpY09kqhPss0yfOVzPNrtFdqkKXnUgdGr5LYa/pokHFYbX3XW/WQUDo9/o0hmdaqDFCNNEHvTARk4hnT1Iwm8Ae1atCgGRr8HDVpjQ3Ql2uD5E3oaEwIlRkNmdAGjEvpSoe0PEOBVIs/JYQs6RRlo89swVmKwhYZYcnKUyUa6y7KzqFK4+ITYihrQhPLK7bgsqo8ZI3M6Pv9PplePtMsxEVruVAHJxA/w8W+J4O"
+  }
+}

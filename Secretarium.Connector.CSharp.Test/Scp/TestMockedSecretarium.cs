@@ -43,8 +43,8 @@ namespace Secretarium.Test
         {
             // Client keys
             Assert.IsTrue(ScpConfigHelper.TryLoad("test.x509.json", out ScpConfig config));
-            Assert.IsTrue(config.keys.TryGetECDsaKey(out ECDsaCng clientECDsaCng));
-            var clientPub = clientECDsaCng.Key.PublicKey();
+            Assert.IsTrue(config.TryGetECDsaKey(out ECDsaCng clientECDsaKeyCng, "SecretariumTestClient256"));
+            var clientPub = clientECDsaKeyCng.ExportPublicKeyRaw();
 
             // Client Hello
             var clientEph = ECDHHelper.CreateCngKey();
@@ -73,7 +73,7 @@ namespace Secretarium.Test
 
             // Client Proof Of Identity
             var nonce = ByteHelper.GetRandom(32);
-            var nonceSigned = clientECDsaCng.SignData(nonce);
+            var nonceSigned = clientECDsaKeyCng.SignData(nonce);
             var clientProofOfIdentity = ByteHelper.Combine(nonce, clientEphPub, clientPub, nonceSigned);
             Assert.IsTrue(ClientProofOfIdentity.Parse(clientProofOfIdentity, out ClientProofOfIdentity clientProofOfIdentityObj));
 
@@ -97,7 +97,7 @@ namespace Secretarium.Test
 
             // Client Checks Server Proof Of Idendity
             var msg = "Hey you! Welcome to Secretarium!".ToBytes();
-            var secretariumECDsaCng = serverIdentityObj.publicKey.ToECDsaCngKey();
+            var secretariumECDsaCng = ECDsaHelper.ImportPublicKey(serverIdentityObj.publicKey);
             Assert.IsTrue(secretariumECDsaCng.VerifyData(
                 ByteHelper.Combine(serverProofOfIdentityObj.nonce, msg), serverProofOfIdentityObj.welcomeSigned));
 

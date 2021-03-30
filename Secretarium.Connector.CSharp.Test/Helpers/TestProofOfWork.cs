@@ -14,7 +14,7 @@ namespace Secretarium.Test
             Assert.IsTrue(res);
         }
 
-        [Test]
+        [Test, Explicit, Ignore("for debug only")]
         public void TestComputeProofOfWork()
         {
             var d = new ProofOfWorkDetails
@@ -38,7 +38,7 @@ namespace Secretarium.Test
            Difficulty 20, proof 2646ms, verification 0ms
            Difficulty 21, proof 6063ms, verification 0ms
            Difficulty 22, proof 11010ms, verification 0ms */
-        [Test, Explicit]
+        [Test, Explicit, Ignore("for debug only")]
         public void TestPerformances()
         {
             var difficulties = new int[] { 15, 16, 17, 18, 19, 20, 21, 22 };
