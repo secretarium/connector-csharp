@@ -7,7 +7,7 @@ namespace Secretarium.Helpers
     {
         public static bool ComputeProofOfWork(this ProofOfWorkDetails details, out byte[] proof)
         {
-            var computer = new ProofOfWork<SHA256Cng>(details.difficulty, details.challenge);
+            var computer = new ProofOfWork<SHA256>(HashHelper.Sha256, details.difficulty, details.challenge);
 
             return computer.Compute(out proof);
         }

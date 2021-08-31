@@ -12,9 +12,9 @@ namespace Secretarium.Helpers
         public byte Difficulty { get; private set; }
         public byte[] Challenge { get; private set; }
 
-        public ProofOfWork(byte difficulty, byte[] challenge)
+        public ProofOfWork(T hasher, byte difficulty, byte[] challenge)
         {
-            _hasher = (T)Activator.CreateInstance(typeof(T));
+            _hasher = hasher;
 
             Difficulty = difficulty;
             Challenge = challenge;

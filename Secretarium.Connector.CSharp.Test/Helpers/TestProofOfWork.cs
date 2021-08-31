@@ -10,7 +10,7 @@ namespace Secretarium.Test
     {
         private void VerifyPow(ProofOfWorkDetails details, byte[] proof)
         {
-            var res = new ProofOfWork<SHA256Cng>(details.difficulty, details.challenge).Verify(proof);
+            var res = new ProofOfWork<SHA256>(HashHelper.Sha256, details.difficulty, details.challenge).Verify(proof);
             Assert.IsTrue(res);
         }
 

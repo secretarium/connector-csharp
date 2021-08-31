@@ -14,7 +14,7 @@ namespace Secretarium.Helpers
             return convertor == null ? data.GetUtf8String().DeserializeJsonAs<Result<T>>() : convertor(data);
         }
 
-        internal static Result<T> ParseMessage<T>(this byte[] data, byte[] symmetricKey, ScpConfig.EncryptionMode encryptionMode, Func<byte[], T> convertor = null)
+        public static Result<T> ParseMessage<T>(this byte[] data, byte[] symmetricKey, ScpConfig.EncryptionMode encryptionMode, Func<byte[], T> convertor = null)
         {
             var ivOffset = data.Extract(0, 16);
             var decrypted = encryptionMode == ScpConfig.EncryptionMode.AESCTR

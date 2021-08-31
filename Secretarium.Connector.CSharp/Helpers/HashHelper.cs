@@ -4,7 +4,7 @@ namespace Secretarium.Helpers
 {
     public static class HashHelper
     {
-        public static readonly SHA256Cng Sha256 = new SHA256Cng();
+        public static readonly SHA256 Sha256 = SHA256.Create();
 
         public static byte[] HashSha256(this byte[] a)
         {
